@@ -1,3 +1,11 @@
+<?php
+session_start();
+require_once 'config.php';
+
+// Fetch all products from database
+$sql = "SELECT * FROM products ORDER BY category, name";
+$result = $conn->query($sql);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,98 +22,57 @@
             <img src="ecomimages/E-Mart.png" alt="E-Mart Logo">
         </div>
 
-        <div class ="search bar">
-            <input type="text" id="searchInput" placeholder="Search products...">
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search products..." onkeyup="searchProducts()">
             <button onclick="searchProducts()">Search</button>
         </div>
 
         <div class="cart-button">
-            <button onclick="window.location.href='Cart.php'">Cart 🛒</button>
+            <button onclick="window.location.href='cart.php'">
+                Cart 🛒 
+                <?php 
+                $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
+                if($cart_count > 0) echo "($cart_count)";
+                ?>
+            </button>
         </div>
     </header>
-
-    
 
     <!-- Main Content -->
     <main class="container">
         <h2>Welcome to E-Mart</h2>
         <p>Your one-stop shop for everyday essentials.</p>
 
+        <!-- Success message -->
+        <?php if(isset($_SESSION['message'])): ?>
+            <div class="alert success">
+                <?php 
+                echo $_SESSION['message']; 
+                unset($_SESSION['message']);
+                ?>
+            </div>
+        <?php endif; ?>
+
         <!-- Products Grid -->
-        <div class="products-grid">
-            <!-- Personal Care -->
-            <div class="product-card">
-                <h3>Colgate Toothpaste</h3>
-                <img src="ecomimages/colgate-toothpaste.jpg" alt="Colgate Toothpaste" width = "170" height = "170">
-                <p>Price: ₱95</p>
-                <button>Add to Cart</button>
+        <div class="products-grid" id="productsGrid">
+            <?php while($product = $result->fetch_assoc()): ?>
+            <div class="product-card" data-name="<?php echo strtolower($product['name']); ?>">
+                <h3><?php echo htmlspecialchars($product['name']); ?></h3>
+                <img src="<?php echo htmlspecialchars($product['image']); ?>" 
+                     alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                     width="170" height="170">
+                <p class="price">Price: ₱<?php echo number_format($product['price'], 2); ?></p>
+                <form method="POST" action="add_to_cart.php" class="add-cart-form">
+                    <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                    <input type="hidden" name="product_name" value="<?php echo htmlspecialchars($product['name']); ?>">
+                    <input type="hidden" name="product_price" value="<?php echo $product['price']; ?>">
+                    <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+                </form>
             </div>
-
-            <div class="product-card">
-                <h3>Toothbrush</h3>
-                <img src="ecomimages/curaprox.png" alt="Toothbrush" width = "170" height = "170">
-                <p>Price: ₱40</p>
-                <button>Add to Cart</button>
-            </div>
-
-            <div class="product-card">
-                <h3>Shampoo</h3>
-                <img src="ecomimages/Olaplex-shampoo.jpg" alt="Shampoo" width = "170" height = "170">
-                <p>Price: ₱150</p>
-                <button>Add to Cart</button>
-            </div>
-
-            <div class="product-card">
-                <h3> Liquid Hand Soap</h3>
-                <img src="ecomimages/handsoap.png" alt="Soap" width = "170" height = "170">
-                <p>Price: ₱40</p>
-                <button>Add to Cart</button>
-            </div>
-
-            <div class="product-card">
-                <h3>Toilet Paper</h3>
-                <img src="ecomimages/toilet-paper.jpg" alt="Toilet Paper" width = "170" height = "170">
-                <p>Price: ₱110</p>
-                <button>Add to Cart</button>
-            </div>
-
-            <!-- Cleaning Supplies -->
-            <div class="product-card">
-                <h3>Domex</h3>
-                <img src="ecomimages/Domex.jpg" alt="Domex" width = "170" height = "170">
-                <p>Price: ₱120</p>
-                <button>Add to Cart</button>
-            </div>
-
-            <div class="product-card">
-                <h3>Liquid Soap Face & Body Wash</h3>
-                <img src="ecomimages/safeguard-liquidsoap.jpg" alt="Liquid Hand Soap" width = "170" height = "170">
-                <p>Price: ₱85</p>
-                <button>Add to Cart</button>
-            </div>
-
-            <div class="product-card">
-                <h3>Window Cleaner</h3>
-                <img src="ecomimages/Windex.jpg" alt="Window Cleaner" width = "170" height = "170">
-                <p>Price: ₱100</p>
-                <button>Add to Cart</button>
-            </div>
-
-            <div class="product-card">
-                <h3>Scents / Albatroz</h3>
-                <img src="ecomimages/Albatross(1).png" alt="Scents / Albatroz" width = "170" height = "170">
-                <p>Price: ₱90</p>
-                <button>Add to Cart</button>
-            </div>
-
-            <div class="product-card">
-                <h3>Bar Detergent</h3>
-                <img src="ecomimages/Surfbar.jpg" alt="Bar Detergent" width = "170" height = "170">
-                <p>Price: ₱60</p>
-                <button>Add to Cart</button>
-            </div>
+            <?php endwhile; ?>
         </div>
     </main>
 
+    <script src="script.js"></script>
 </body>
 </html>
