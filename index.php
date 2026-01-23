@@ -2,9 +2,16 @@
 session_start();
 require_once 'config.php';
 
-// Fetch all products from database
-$sql = "SELECT * FROM products ORDER BY category, name";
+// 1. Define the query string
+$sql = "SELECT * FROM products ORDER BY name";
+
+// 2. EXECUTE the query - This creates the $result variable you were missing
 $result = $conn->query($sql);
+
+// 3. Error check: If the query fails, stop and show why
+if (!$result) {
+    die("Database Error: " . $conn->error);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -16,7 +23,6 @@ $result = $conn->query($sql);
 </head>
 <body>
 
-    <!-- Header / Logo -->
     <header class="header">
         <div class="logo">  
             <img src="ecomimages/E-Mart.png" alt="E-Mart Logo">
@@ -38,12 +44,10 @@ $result = $conn->query($sql);
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="container">
         <h2>Welcome to E-Mart</h2>
         <p>Your one-stop shop for everyday essentials.</p>
 
-        <!-- Success message -->
         <?php if(isset($_SESSION['message'])): ?>
             <div class="alert success">
                 <?php 
@@ -53,23 +57,34 @@ $result = $conn->query($sql);
             </div>
         <?php endif; ?>
 
-        <!-- Products Grid -->
         <div class="products-grid" id="productsGrid">
-            <?php while($product = $result->fetch_assoc()): ?>
-            <div class="product-card" data-name="<?php echo strtolower($product['name']); ?>">
-                <h3><?php echo htmlspecialchars($product['name']); ?></h3>
-                <img src="<?php echo htmlspecialchars($product['image']); ?>" 
-                     alt="<?php echo htmlspecialchars($product['name']); ?>" 
-                     width="170" height="170">
-                <p class="price">Price: ₱<?php echo number_format($product['price'], 2); ?></p>
-                <form method="POST" action="add_to_cart.php" class="add-cart-form">
-                    <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
-                    <input type="hidden" name="product_name" value="<?php echo htmlspecialchars($product['name']); ?>">
-                    <input type="hidden" name="product_price" value="<?php echo $product['price']; ?>">
-                    <button type="submit" class="add-to-cart-btn">Add to Cart</button>
-                </form>
-            </div>
-            <?php endwhile; ?>
+            <?php 
+            // Check if we actually got rows back from the database
+            if ($result->num_rows > 0): 
+                while($product = $result->fetch_assoc()): 
+            ?>
+                <div class="product-card" data-name="<?php echo strtolower($product['name']); ?>">
+                    <h3><?php echo htmlspecialchars($product['name']); ?></h3>
+                    
+                    <img src="<?php echo htmlspecialchars($product['image']); ?>" 
+                         alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                         width="170" height="170">
+                    
+                    <p class="price">Price: ₱<?php echo number_format($product['price'], 2); ?></p>
+                    
+                    <form method="POST" action="addtocart.php" class="add-cart-form">
+                        <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                        <input type="hidden" name="product_name" value="<?php echo htmlspecialchars($product['name']); ?>">
+                        <input type="hidden" name="product_price" value="<?php echo $product['price']; ?>">
+                        <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+                    </form>
+                </div>
+            <?php 
+                endwhile; 
+            else: 
+            ?>
+                <p>No products found in the database table.</p>
+            <?php endif; ?>
         </div>
     </main>
 

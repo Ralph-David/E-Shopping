@@ -31,7 +31,6 @@ if(isset($_GET['clear'])) {
 </head>
 <body>
 
-<!-- Header -->
 <header class="header">
     <div class="logo">
         <img src="ecomimages/E-Mart.png" alt="E-Mart Logo">
@@ -45,7 +44,6 @@ if(isset($_GET['clear'])) {
 <main class="container">
     <h2>Your Shopping Cart</h2>
 
-    <!-- Success/Info message -->
     <?php if(isset($_SESSION['message'])): ?>
         <div class="alert info">
             <?php 
@@ -73,6 +71,8 @@ if(isset($_GET['clear'])) {
                 <tr>
                     <th>Product</th>
                     <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -80,11 +80,16 @@ if(isset($_GET['clear'])) {
             <?php
             $total = 0;
             foreach ($_SESSION['cart'] as $index => $item):
-                $total += $item['price'];
+                // Handle cases where quantity might not be set yet
+                $qty = isset($item['quantity']) ? $item['quantity'] : 1;
+                $subtotal = $item['price'] * $qty;
+                $total += $subtotal;
             ?>
             <tr>
                 <td class="product-name"><?php echo htmlspecialchars($item['name']); ?></td>
                 <td class="product-price">₱<?php echo number_format($item['price'], 2); ?></td>
+                <td class="product-qty"><?php echo $qty; ?></td>
+                <td class="product-subtotal">₱<?php echo number_format($subtotal, 2); ?></td>
                 <td>
                     <button onclick="if(confirm('Remove this item?')) window.location.href='cart.php?remove=<?php echo $index; ?>'" 
                             class="remove-btn">Remove</button>
@@ -94,7 +99,7 @@ if(isset($_GET['clear'])) {
             </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td><strong>Total</strong></td>
+                    <td colspan="3" style="text-align:right;"><strong>Total:</strong></td>
                     <td><strong>₱<?php echo number_format($total, 2); ?></strong></td>
                     <td></td>
                 </tr>
